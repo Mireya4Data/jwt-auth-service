@@ -1,22 +1,23 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from dotenv import load_dotenv
 
-# SQLite database file - will be created automatically in the project folder
-SQLALCHEMY_DATABASE_URL = "sqlite:///./auth_service.db"
+load_dotenv()
 
-# connect_args is needed only for SQLite (allows multiple threads to use the same connection)
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Each instance of SessionLocal is a database session
+if not SQLALCHEMY_DATABASE_URL:
+    raise RuntimeError("DATABASE_URL not set in .env file")
+
+# No connect_args needed for Postgres (that was SQLite-specific)
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base class our models will inherit from
 Base = declarative_base()
 
 
-# Dependency - gives each request its own DB session, closes it when done
 def get_db():
     db = SessionLocal()
     try:
